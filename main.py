@@ -9,7 +9,11 @@ class WebScraper:
     @staticmethod
     async def fetch_html(url, session):
         try:
-            async with session.get(url, timeout=20) as response:
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (HTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"
+            }
+
+            async with session.get(url, timeout=20, headers=headers) as response:
                 response.raise_for_status()  # Вызывает исключение для кода ответа 4xx/5xx
                 return await response.text()
         except aiohttp.ClientError as e:
@@ -29,8 +33,45 @@ class WebScraper:
             return await asyncio.gather(*tasks)
 
 class WebParser:
-    def __init__(self, html_content):
-        self.html_content = html_content
+    async def parse_data(self, html_content):
+        try:
+            soup = BeautifulSoup(html_content[0], 'lxml')
+            parsed_data = {
+                'title' : soup.find('meta', attrs={'name': 'title'})['content'],
+                'tags' : [tag['content'] for tag in soup.find_all('a', class_='tm-tags-list__link')]
+            }
+            return parsed_data
+        except Exception as e:
+            print(f'Error: {e}')
+            return {}
+
+class Pipeline:
+    def __init__(self, urls):
+        self.scraper = WebScraper(urls)
+        self.parser = WebParser()
+    async def run(self):
+        print('Starting data pipeline...')
+
+        scraped_data = await self.scraper.get_html_data()
+
+        parsing = await self.parser.parse_data(scraped_data)
+
+        print(parsing)
+
+        print('Pipeline completed!')
+
+if __name__ == "__main__":
+    urls = ['https://habr.com/ru/articles/870642/']
+
+    runner = Pipeline(urls)
+
+    asyncio.run(runner.run())
+
+
+
+
+
+
 
 
 
