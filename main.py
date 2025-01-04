@@ -2,6 +2,9 @@ from bs4 import BeautifulSoup
 import asyncio
 import aiohttp
 
+from dev import save_data
+
+
 class WebScraper:
     def __init__(self, urls):
         self.urls = urls
@@ -58,13 +61,14 @@ class Pipeline:
 
         parsing = await self.parser.parse_data(scraped_data)
 
+        save_data('parsed_pages.json', {'data': parsing})
         print(parsing)
 
         print('Pipeline completed!')
 
 def main_menu():
     urls = []
-    print('\nДобро пожаловать в Персональный помощник!')
+    print('\nДобро пожаловать!')
     print('Введите ссылку на статью Хабра:')
     urls.append(input())
     while True:
@@ -79,7 +83,7 @@ def main_menu():
 
 
 if __name__ == "__main__":
-    # urls = ['https://habr.com/ru/articles/870642/', 'https://habr.com/ru/articles/871426/']
+    #['https://habr.com/ru/articles/870642/', 'https://habr.com/ru/articles/871426/']
 
     urls = main_menu()
 
