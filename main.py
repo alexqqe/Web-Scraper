@@ -36,24 +36,30 @@ class WebScraper:
             results = await asyncio.gather(*tasks)
             return [result for result in results if result is not None]  # Удаляем None
 
+
 class WebParser:
-    async def parse_data(self, html_content):
+    @staticmethod
+    async def parse_data(html_content):
         data = []
         for html in html_content:
             try:
                 soup = BeautifulSoup(html, 'lxml')
                 parsed_data = {
-                    'title': soup.find(class_='tm-title tm-title_h1').text if soup.find(class_='tm-title tm-title_h1') else 'No Title',
+                    'title': soup.find(class_='tm-title tm-title_h1').text if soup.find(
+                        class_='tm-title tm-title_h1') else 'No Title',
                     'tags': [tag.text for tag in soup.find_all('a', class_='tm-tags-list__link')]
                 }
                 data.append(parsed_data)
             except Exception as e:
                 print(f'Error: {e}')
         return data
+
+
 class Pipeline:
     def __init__(self, urls):
         self.scraper = WebScraper(urls)
         self.parser = WebParser()
+
     async def run(self):
         print('Starting data pipeline...')
 
@@ -61,42 +67,33 @@ class Pipeline:
 
         parsing = await self.parser.parse_data(scraped_data)
 
-        save_data('parsed_pages.json', {'data': parsing})
+        asyncio.run(save_data('parsed_pages.json', {'data': parsing}))
         print(parsing)
 
         print('Pipeline completed!')
 
+
 def main_menu():
-    urls = []
+    urls_list = []
     print('\nДобро пожаловать!')
     print('Введите ссылку на статью Хабра:')
-    urls.append(input())
+    urls_list.append(input())
     while True:
         print('Добавить ещё одну ссылку?')
         print('1. Да')
         print('2. Нет, хватит')
         choice = input('Введите номер действия: ')
         if choice == '1':
-            urls.append(input('Введите ссылку: '))
+            urls_list.append(input('Введите ссылку: '))
         elif choice == '2':
-            return urls
+            return urls_list
 
 
 if __name__ == "__main__":
-    #['https://habr.com/ru/articles/870642/', 'https://habr.com/ru/articles/871426/']
+    # ['https://habr.com/ru/articles/870642/', 'https://habr.com/ru/articles/871426/']
 
-    urls = main_menu()
+    urls1 = main_menu()
 
-    runner = Pipeline(urls)
+    runner = Pipeline(urls1)
 
     asyncio.run(runner.run())
-
-
-
-
-
-
-
-
-
-

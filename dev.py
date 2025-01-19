@@ -4,9 +4,11 @@ from bs4 import BeautifulSoup
 import asyncio
 import aiohttp
 
-def save_data(file_path, data):
-    with open(file_path, 'w') as f:
+
+async def save_data(file_path, data):
+    with open(file_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False)
+
 
 def main_menu(parsed_data):
     print('\nДобро пожаловать!')
@@ -14,9 +16,10 @@ def main_menu(parsed_data):
     articles = [article for article in parsed_data if word in article['title']]
     return articles
 
+
 class WebScraper:
     def __init__(self, urls):
-        self.url = url
+        self.url = urls
 
     @staticmethod
     async def fetch_html(url, session):
@@ -81,15 +84,17 @@ class WebScraper:
 
             return results
 
+
 class WebParser:
-    async def parse_data(self, html_content):
+    @staticmethod
+    async def parse_data(html_content):
         data = []
         for html in html_content:
             try:
                 soup = BeautifulSoup(html, 'lxml')
 
                 for title in soup.find_all(class_='tm-title__link'):
-                    data.append({'title' :title.text,
+                    data.append({'title': title.text,
                                  'href': f'https://habr.com{title.get('href')}'
                                  })
             except Exception as e:
@@ -97,10 +102,12 @@ class WebParser:
         print(f'Импортировано статей: {len(data)}')
         return data
 
+
 class Pipeline:
     def __init__(self, urls):
         self.scraper = WebScraper(urls)
         self.parser = WebParser()
+
     async def run(self):
         print('Starting data pipeline...')
 
@@ -110,16 +117,16 @@ class Pipeline:
 
         final_data = main_menu(parsed_data)
 
-        save_data('parsed_articles.json', {'data': final_data})
+        asyncio.run(save_data('parsed_articles.json', {'data': final_data}))
 
         print('Вот необходимые статьи: ', final_data)
 
         print('Pipeline completed!')
 
+
 if __name__ == "__main__":
+    url1 = f'https://habr.com/ru/articles/top/alltime/page'
 
-    url = f'https://habr.com/ru/articles/top/alltime/page'
-
-    runner = Pipeline(url)
+    runner = Pipeline(url1)
 
     asyncio.run(runner.run())
